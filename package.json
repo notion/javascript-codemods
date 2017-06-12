@@ -1,0 +1,15 @@
+{
+  "name": "javascript-codemods",
+  "version": "1.0.0",
+  "description": "Modify JavaScript code for repetitive tasks",
+  "main": "index.js",
+  "repository": "git@github.com:notion/javascript-codemods.git",
+  "author": "Michael Baldwin <baldwmic@mail.gvsu.edu>",
+  "license": "MIT",
+  "dependencies": {
+    "jscodeshift": "^0.3.30"
+  },
+  "devDependencies": {
+    "jest": "^20.0.4"
+  }
+}
