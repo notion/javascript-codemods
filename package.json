@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Modify JavaScript code for repetitive tasks",
   "main": "index.js",
+  "scripts": {
+    "test": "jest --bail"
+  },
   "repository": "git@github.com:notion/javascript-codemods.git",
   "author": "Michael Baldwin <baldwmic@mail.gvsu.edu>",
   "license": "MIT",
