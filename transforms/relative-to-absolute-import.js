@@ -4,7 +4,7 @@ const absolutePathImportPattern = /^\w/; // 'm'
 const currentDirectoryImportPattern = /^\.\/\w/; // './m'
 const relativePathImportPattern = /^\.{2}\//; // '../../m'
 
-const captureRelativeImportFirstNamedDirectory = /\/(\w+)/; // '../../module/folder' => 'module'
+const captureRelativeImportFirstNamedDirectory = /\/([\w-]+)/; // '../../module/folder' => 'module'
 const captureRelativeImportNamedDirectories = /\/(\w.*)/; // '../../module/folder' => 'module/folder'
 
 const directoryInFilePath = (filePath, searchDirectory) => {
@@ -16,7 +16,7 @@ const DEFUALT_PREFIX = '';
 
 // https://github.com/harthur/nomnom is used to parse command line options
 // so we compress a list of names into a string instead of an array
-const DIRECTORIES = ['moduleA', 'moduleB', 'moduleC'];
+const DIRECTORIES = ['moduleA', 'moduleB', 'module-c'];
 const DELIMITER = ',';
 const arrayToString = (accumulator, currentValue, currentIndex, array) => {
   if (currentIndex === array.length - 1) return `${accumulator}${currentValue}`;
@@ -56,7 +56,8 @@ function transformer(fileInfo, api, options = {}) {
       const fileInsideDirectory = directoryInFilePath(filePath, firstNamedDirectory);
       if (fileInsideDirectory) return false;
 
-      return directoriesWhiteList.includes(firstNamedDirectory);
+      const directoryInWhiteList = directoriesWhiteList.includes(firstNamedDirectory);
+      return directoryInWhiteList;
     })
     .map(function(path) {
       const importSourceValue = path.node.source.value;
