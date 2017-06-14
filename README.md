@@ -13,18 +13,18 @@ Convert relative imports from a list of top level directories to absolute import
   - `import ... from '../directoryA'` is a relative import
   - `import ... from '.../directoryA'` is not a relative import
 - ignores imports that are not top level imports
-  - `import ... from '../directoryA'` is a top level import if the topLevelDirectory is `rootDirectory/directoryA` and the file is at `rootDirectory/directoryB/file.js`
+  - `import ... from '../directoryA'` is a top level import if the rootDirectory is `rootDirectory/` and the file is at `rootDirectory/directoryB/file.js`
   - `import ... from '../../directoryA'` is not a top level import if the
-  topLevelDirectory is `rootDirectory/directoryA` and the file is at
+  rootDirectory is `rootDirectory/directoryA` and the file is at
   `rootDirectory/directoryB/file.js`
 - ignores imports of directories that are not in the whitelist of top level directories
   - `import ... from '../directoryA/directoryB'` is in the top level directory whitelist of `directoryA`
   - `import ... from '../directoryA/directoryB'` is not in the top level directory whitelist of `directoryB`
 #### usage
 ```
-jscodeshift -t transforms/relative-to-absolute-import.js rootDirectory/topLevelDirectory/file.js --parser=flow --topLevelDirectory=rootDirectory/topLevelDirectory --directories='topLevelDirectory' --prefix='myPrefix' -d -p
+jscodeshift -t transforms/relative-to-absolute-import.js rootDirectory/topLevelDirectory/file.js --parser=flow --rootDirectory=rootDirectory/ --directories='topLevelDirectory' --prefix='myPrefix' -d -p
 ```
-- topLevelDirectory: `--topLevelDirectory:'rootDirectory/topLevelDirectory'` sets the location of the top level directory to beneath `rootDirectory/`
+- rootDirectory: `--rootDirectory:'rootDirectory'` sets the location of the root directory where top level directories live
 - directories: `--directories:'directoryA,directoryB'` makes the whitelist of top level directories `['directoryA', 'directoryB']`
 - prefix: `--prefix='myPrefix'` will replace `import form '../directoryA'` with `import ... from 'myPrefix/directoryA'`
 
