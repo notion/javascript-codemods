@@ -16,6 +16,9 @@ import { NamedExportA, NamedExportB as NamedExportC } from '../../moduleB/folder
 // NO: relative import is not a top level import
 import * as moduleExports from '../../../module-c';
 
+// NO: relative import is not a top level import
+import * as moduleExports from '../..';
+
 // NO: relative import, directory not a top level directory
 import { NamedExportA } from '../ignoredModuleA';
 

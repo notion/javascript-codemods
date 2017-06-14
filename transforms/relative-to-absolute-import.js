@@ -1,17 +1,14 @@
 /*
  * Convert relative imports from a list of top level directories to absolute imports
  */
-import { relative, sep } from 'path';
+import path from 'path';
 
-// TODO: investigate passing defaults from test runner
-// since these defaults are set for tests!
-
-const DEFAULT_TOP_LEVEL_DIRECTORY = 'transforms/__testfixtures__';
+// TODO: investigate setup / tear down for test runner since tests rely on defaults
+const DEFAULT_ROOT_DIRECTORY = 'transforms/';
 // command line parser does not handle arrays so we compress into a string
 const DEFAULT_DIRECTORIES = 'moduleA,moduleB,module-c';
 const DEFUALT_PREFIX = '';
-
-const DEFAULT_OPTIONS = { topLevelDirectory: DEFAULT_TOP_LEVEL_DIRECTORY, directories: DEFAULT_DIRECTORIES, prefix: DEFUALT_PREFIX };
+const DEFAULT_OPTIONS = { rootDirectory: DEFAULT_ROOT_DIRECTORY, directories: DEFAULT_DIRECTORIES, prefix: DEFUALT_PREFIX };
 
 function transformer(fileInfo, api, options = {}) {
   const filePath = fileInfo.path;
@@ -19,7 +16,7 @@ function transformer(fileInfo, api, options = {}) {
   const j = api.jscodeshift;
 
   const mergedOptions = Object.assign(DEFAULT_OPTIONS, options);
-  const { topLevelDirectory, directories, prefix } = mergedOptions;
+  const { rootDirectory, directories, prefix } = mergedOptions;
   // decompress string into array of directories
   const topLevelDirectories = directories.split(',');
 
@@ -38,7 +35,7 @@ function transformer(fileInfo, api, options = {}) {
       const isRelativeImport = checkIsRelativeImport(importSourceValue);
       if (!isRelativeImport) return false;
 
-      const isTopLevelImport = checkIsTopLevelImport(importSourceValue, filePath, topLevelDirectory);
+      const isTopLevelImport = checkIsTopLevelImport(importSourceValue, filePath, rootDirectory);
       if (!isTopLevelImport) return false;
 
       const isTopLevelDirectory = checkIsTopLevelDirectory(importSourceValue, topLevelDirectories);
@@ -76,25 +73,33 @@ function checkIsRelativeImport(importSourceValue) {
   return relativeImportPattern.test(importSourceValue);
 }
 
-// importSourceValue: '../folderA', filePath: 'modules/folderB/file.js', topLevelDirectory: 'modules/folderB' => true
-function checkIsTopLevelImport(importSourceValue, filePath, topLevelDirectory) {
-  const relativePathToTop = getRelativePathToTop(filePath, topLevelDirectory);
-  const relativePathToDirectory = getRelativePathToDirectory(importSourceValue);
-  return relativePathToTop === relativePathToDirectory;
+// importSourceValue: '../folderA', filePath: 'modules/folderB/file.js', rootDirectory: 'modules' => true
+function checkIsTopLevelImport(importSourceValue, filePath, rootDirectory) {
+  const relativePathToRootDirectory = getRelativePathToRootDirectory(filePath, rootDirectory);
+  const relativePathToImportDirectory = getRelativePathToImportDirectory(importSourceValue);
+  return relativePathToRootDirectory === relativePathToImportDirectory;
 }
 
-// filePath: 'modules/folder/file.js', topLevelDirectory: 'modules/folder' => '../'
-function getRelativePathToTop(filePath, topLevelDirectory) {
-  const pathFromFileToTop = relative(filePath, topLevelDirectory);
-  // pad relative path with delimiter since `relative` returns '../..' instead of desired '../../'
-  return pathFromFileToTop + sep;
+// filePath: 'modules/folder/folder/file.js', rootDirectory: 'modules' => '../..'
+function getRelativePathToRootDirectory(filePath, rootDirectory) {
+  const fileDirectory = path.dirname(filePath);
+  return path.relative(fileDirectory, rootDirectory);
 }
 
-// '../../module/folder' => '../../'
-function getRelativePathToDirectory(importSourceValue) {
-  const relativePathPattern = /(.*?)\w/;
+// '../../module/folder' => '../..'
+// '../..' => '../..'
+// 'module' => 'module'
+function getRelativePathToImportDirectory(importSourceValue) {
+  const relativePathPattern = /((?:\.{2}\/?)+)/;
+  const result = relativePathPattern.exec(importSourceValue);
+  if (!result) return importSourceValue;
   const captureGroup = 1;
-  return relativePathPattern.exec(importSourceValue)[captureGroup];
+  const relativePath = result[captureGroup];
+  // since `path.relative` does not include last separator, trim it if it exists
+  if (relativePath.charAt(relativePath.length - 1) === path.sep) {
+    return relativePath.substring(0, relativePath.length - 1);
+  }
+  return relativePath;
 }
 
 function checkIsTopLevelDirectory(importSourceValue, topLevelDirectories) {
@@ -103,17 +108,23 @@ function checkIsTopLevelDirectory(importSourceValue, topLevelDirectories) {
 }
 
 // '../../module-name/folder' => 'module-name'
+// '../..' => '../..'
 function getFirstNamedDirectory(importSourceValue) {
   const firstNamedDirectoryPattern = /([\w-]+)/;
+  const result = firstNamedDirectoryPattern.exec(importSourceValue);
+  if (!result) return importSourceValue;
   const captureGroup = 1;
-  return firstNamedDirectoryPattern.exec(importSourceValue)[captureGroup];
+  return result[captureGroup];
 }
 
 // '../../module/folder' => 'module/folder'
+// '../..' => '../..'
 function getNamedDirectories(importSourceValue) {
   const namedDirectoriesPattern = /\/(\w.*)/;
+  const result = namedDirectoriesPattern.exec(importSourceValue);
+  if (!result) return importSourceValue;
   const captureGroup = 1;
-  return namedDirectoriesPattern.exec(importSourceValue)[captureGroup];
+  return result[captureGroup];
 }
 
 function prefixString(prefix, string) {
