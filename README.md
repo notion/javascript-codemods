@@ -3,25 +3,30 @@ Automate repetitive modifications to JavaScript source code using [`jscodeshift`
 
 ## transforms
 ### relative-to-absolute-import
-Converts import statements using a relative path to an absolute path.
+Convert relative imports from a list of top level directories to absolute imports.
 #### rules
-- ignores absolute imports, i.e. `import ... from 'directory'`
-- ignores relative imports that refer to the current directory, i.e. `import ... from './directory'`
+- ignores absolute imports
+  - `import ... from 'directory'` is an absolute import
+- ignores relative imports that refer to the current directory
+  - `import ... from './directory'` is a relative import using the current directory
 - ignores imports that are not relative imports
-- ignores relative imports that refer to a directory the file is in
-  - `import ... from '../directory'` will be ignored when file is anywhere inside `directory` recursively
-- only converts relative import statements that start with a directory in a whitelist
-  - `import ... from '../directoryA/directoryB'` will be replaced when whitelist includes `directoryA`
-  - `import ... from '../directoryA/directoryB'` will not be replaced when whitelist does not include `directoryA`
-  - `import ... from '../directoryA/directoryB'` will not be replaced when whitelist includes `directoryB`, but does not include `directoryA`
-- supports adding a prefix to replace imports with
-  - `--prefix='rootDirectory/'` will replace `import ... from '../directoryA'` with `import ... from 'rootDirectory/directoryA'`
-- allows providing a whitelist of directories
-  - `--directories='directoryA,directoryB'` makes the whitelist of directories `['directoryA', 'directoryB']`
+  - `import ... from '../directoryA'` is a relative import
+  - `import ... from '.../directoryA'` is not a relative import
+- ignores imports that are not top level imports
+  - `import ... from '../directoryA'` is a top level import if the topLevelDirectory is `rootDirectory/directoryA` and the file is at `rootDirectory/directoryB/file.js`
+  - `import ... from '../../directoryA'` is not a top level import if the
+  topLevelDirectory is `rootDirectory/directoryA` and the file is at
+  `rootDirectory/directoryB/file.js`
+- ignores imports of directories that are not in the whitelist of top level directories
+  - `import ... from '../directoryA/directoryB'` is in the top level directory whitelist of `directoryA`
+  - `import ... from '../directoryA/directoryB'` is not in the top level directory whitelist of `directoryB`
 #### usage
 ```
-jscodeshift -t transforms/relative-to-absolute-import.js file.js -d -p --prefix='myPrefix' --directories='myDirectory,yourDirectory'
+jscodeshift -t transforms/relative-to-absolute-import.js rootDirectory/topLevelDirectory/file.js --parser=flow --topLevelDirectory=rootDirectory/topLevelDirectory --directories='topLevelDirectory' --prefix='myPrefix' -d -p
 ```
+- topLevelDirectory: `--topLevelDirectory:'rootDirectory/topLevelDirectory'` sets the location of the top level directory to beneath `rootDirectory/`
+- directories: `--directories:'directoryA,directoryB'` makes the whitelist of top level directories `['directoryA', 'directoryB']`
+- prefix: `--prefix='myPrefix'` will replace `import form '../directoryA'` with `import ... from 'myPrefix/directoryA'`
 
 ## contributing
 ### development
