@@ -14,4 +14,4 @@ DIRECTORIES='analytics,api-endpoint,attachments,auth,bootup,compose,compose-acti
 PREFIX='notion-modules/'
 
 # transform files
-jscodeshift -t $TRANSFORMER $FILES --parser=flow --rootDirectory=$ROOT_DIRECTORY --directories=$DIRECTORIES --prefix=$PREFIX -d -p
+jscodeshift -t $TRANSFORMER $FILES --parser=flow --rootDirectory=$ROOT_DIRECTORY --directories=$DIRECTORIES --prefix=$PREFIX
